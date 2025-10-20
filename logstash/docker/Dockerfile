@@ -1,7 +1,11 @@
 ARG BASE=swr.cn-north-1.myhuaweicloud.com/cxwn/openanolis/anolisos:8.8
 FROM ${BASE}
 
-ARG TARGETARCH="amd64"
+ARG TARGETARCH="amd64" \
+    VERSION="9.1.5"
+
+# https://artifacts.elastic.co/downloads/logstash/logstash-9.1.5-linux-x86_64.tar.gz
+ADD ["logstash-${VERSION}-linux-x86_64.tar.gz", "/usr/local/"]
 
 COPY \ 
     config/pipelines.yml config/log4j2.properties config/log4j2.file.properties /usr/local/logstash/config/
@@ -17,6 +21,7 @@ COPY \
     env2yaml/env2yaml-${TARGETARCH} /usr/local/bin/env2yaml
 
 RUN set -eux; \
+    mv "/usr/local/logstash-${VERSION}" /usr/local/logstash; \
     groupadd -g 1000 logstash; \
     useradd -u 1000 -g 1000 -d /usr/local/logstash -M logstash; \
     chown --recursive logstash:logstash /usr/local/logstash/; \

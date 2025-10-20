@@ -10,7 +10,7 @@ ADD ["logstash-${VERSION}-linux-x86_64.tar.gz", "/usr/local/"]
 COPY \ 
     config/pipelines.yml config/log4j2.properties config/log4j2.file.properties /usr/local/logstash-${VERSION}/config/
 COPY \
-    config/logstash-full.yml /usr/loccal/logstash-${VERSION}/config/logstash.yml
+    config/logstash-full.yml /usr/local/logstash-${VERSION}/config/logstash.yml
 COPY \ 
     pipeline/default.conf /usr/local/logstash-${VERSION}/pipeline/logstash.conf
 
@@ -24,7 +24,6 @@ RUN set -eux; \
     mv /usr/local/logstash-${VERSION} /usr/local/logstash; \
     groupadd -g 1000 logstash; \
     useradd -u 1000 -g 1000 -d /usr/local/logstash -M logstash; \
-    chown --recursive logstash:logstash /usr/local/logstash/; \
     chown -R logstash:root /usr/local/logstash; \
     chmod -R g=u /usr/local/logstash; \
     mkdir /licenses/; \
@@ -39,12 +38,13 @@ RUN set -eux; \
 FROM \
     ${BASE}
 
-COPY --from=0 /usr/local/ /usr/local/
+COPY --from=0 /usr/local/logstash /usr/local/logstash
+
+COPY --from=0 /usr/local/bin /usr/local/bin
 
 COPY --from=0 /licenses /licenses
 
 LABEL AUTHOR="CXWN" \
-      MAINTAINER="CXWN" \
       DESCRIPTION="Logstash ${VERSION} for AnolisOS" \
       VERSION="${VERSION}" \
       ARCH="${TARGETARCH}"

@@ -8,20 +8,20 @@ ARG TARGETARCH="amd64" \
 ADD ["logstash-${VERSION}-linux-x86_64.tar.gz", "/usr/local/"]
 
 COPY \ 
-    config/pipelines.yml config/log4j2.properties config/log4j2.file.properties /usr/local/logstash/config/
+    config/pipelines.yml config/log4j2.properties config/log4j2.file.properties /usr/local/logstash-${VERSION}/config/
 COPY \
-    config/logstash-full.yml /usr/share/logstash/config/logstash.yml
+    config/logstash-full.yml /usr/loccal/logstash-${VERSION}/config/logstash.yml
 COPY \ 
-    pipeline/default.conf /usr/share/logstash/pipeline/logstash.conf
+    pipeline/default.conf /usr/local/logstash-${VERSION}/pipeline/logstash.conf
 
 COPY \
-    docker-entrypoint /usr/local/bin/
+    docker-entrypoint.sh /usr/local/bin/entrypoint.sh
 
 COPY \
     env2yaml/env2yaml-${TARGETARCH} /usr/local/bin/env2yaml
 
 RUN set -eux; \
-    mv "/usr/local/logstash-${VERSION}" /usr/local/logstash; \
+    mv /usr/local/logstash-${VERSION} /usr/local/logstash; \
     groupadd -g 1000 logstash; \
     useradd -u 1000 -g 1000 -d /usr/local/logstash -M logstash; \
     chown --recursive logstash:logstash /usr/local/logstash/; \
@@ -30,7 +30,8 @@ RUN set -eux; \
     mkdir /licenses/; \
     mv /usr/local/logstash/NOTICE.TXT /licenses/NOTICE.TXT; \
     mv /usr/local/logstash/LICENSE.txt /licenses/LICENSE.txt; \
-    find /usr/local/logstash -type d -exec chmod g+s {} \; \
+    find /usr/local/logstash -type d -exec chmod g+s {} \;; \
+    cd /usr/local/logstash; \
     chown --recursive logstash:root config/ pipeline/; \
     chmod 0755 /usr/local/bin/entrypoint.sh; \
     chmod 0755 /usr/local/bin/env2yaml
@@ -40,7 +41,7 @@ FROM \
 
 COPY --from=0 /usr/local/ /usr/local/
 
-ARG VERSION=9.1.5
+COPY --from=0 /licenses /licenses
 
 LABEL AUTHOR="CXWN" \
       MAINTAINER="CXWN" \
@@ -56,8 +57,7 @@ ENV TZ=Asia/Shanghai \
 
 RUN set -eux; \
     groupadd -g 1000 logstash; \
-    useradd -u 1000 -g 1000 -d /usr/local/logstash -M logstash; \
-    chown --recursive logstash:logstash /usr/local/logstash/
+    useradd -u 1000 -g 1000 -d /usr/local/logstash -M logstash
 
 WORKDIR \
     /usr/local/logstash
@@ -66,4 +66,5 @@ USER 1000
 
 EXPOSE 9600 5044
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT \
+    ["/usr/local/bin/entrypoint.sh"]
